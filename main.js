@@ -8,18 +8,17 @@ const Player = (name, tileType) => {
 //Module for the gameboard
 const Gameboard = (() => {
     const board = new Array(9).fill('');
-    const gameContainer = document.getElementById("gameboard");
-    
-
+    const gameboardContainer = document.getElementById("gameboard");
+    const winningNotification = document.getElementById("resultnotification");
     function displayBoard() {
-        gameContainer.innerHTML = '';
+        gameboardContainer.innerHTML = '';
         for (let i = 0; i < board.length; i++) {
             const tileButton = document.createElement('button');
             const index = i.toString();
             tileButton.classList.add('gameArrayTile');
             tileButton.setAttribute('id', `${index}`);
             tileButton.innerHTML = `${board[i]}`;
-            gameContainer.appendChild(tileButton);
+            gameboardContainer.appendChild(tileButton);
         }
     }
 
@@ -29,9 +28,9 @@ const Gameboard = (() => {
 
     function placeTile(index, marker) {
         if(board[index] === '') {
-            board[index] = Gameplay.currentPlayer.getTileType();
-            Gameplay.changePlayerTurn();
+            board[index] = Gameplay.checkCurrentPlayer();
         }
+        Gameboard.checkWin();
     }
 
     function getBoard() {
@@ -39,47 +38,61 @@ const Gameboard = (() => {
     }
 
     function checkWin() {
-        //check for a winner
+        const winningCombinations = [
+            [0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
+            function arrayCompare() {
+                for (let i = 0; i < winningCombinations.length; i++) {
+                    const ind1 = winningCombinations[i][0];
+                    const ind2 = winningCombinations[i][1];
+                    const ind3 = winningCombinations[i][2];
+                    if(board[ind1] === Gameplay.checkCurrentPlayer() && board[ind2] === Gameplay.checkCurrentPlayer() && board[ind3] === Gameplay.checkCurrentPlayer()) {
+                        winningNotification.innerHTML = `${Gameplay.checkCurrentPlayer()} wins!`;
+                    } else if(board.includes('') == false){
+                        winningNotification.innerHTML = `It's a tie!~`;
+                    }
+                }
+            }
+        arrayCompare();
     }
         
     return {
         displayBoard,
         placeTile,
         getBoard,
-        gameContainer,
+        gameboardContainer,
         checkWin
     };
     })();
 
-//Module for the game's logic
+//Module for the gameplay
 const Gameplay = ((player1, player2) => {
 
-    const playerOne = Player('Alex', 'X');
-    const playerTwo = Player('Mahira', 'O');
-    let currentPlayer = playerOne;
+    let playerOne = Player('Alex', 'X');
+    let playerTwo = Player('Mahira', 'O');
+    let currentPlayerTile = playerOne.getTileType();
 
     const checkCurrentPlayer = () => {
-        return currentPlayer;
+        return currentPlayerTile;
     }
 
-    const changePlayerTurn = (currentPlayer) => { 
-        if(currentPlayer === playerOne) {
-            currentPlayer = playerTwo;
+    const changePlayerTurn = () => { 
+        if(currentPlayerTile === 'X') {
+            currentPlayerTile = playerTwo.getTileType();
         } else {
-            currentPlayer = playerOne;
+            currentPlayerTile = playerOne.getTileType();
         }
     }
 
     const makeMove = (index) => {
-        Gameboard.placeTile(index, currentPlayer.getTileType());
+        Gameboard.placeTile(index, checkCurrentPlayer());
         Gameboard.displayBoard();
-        changePlayerTurn(currentPlayer);
+        changePlayerTurn();
     }
 
     return {
         changePlayerTurn,
         makeMove,
-        currentPlayer,
+        currentPlayerTile,
         checkCurrentPlayer
     }
 })()
@@ -87,13 +100,10 @@ const Gameplay = ((player1, player2) => {
 
 //unsorted code
 
-Gameboard.gameContainer.addEventListener('click', function (e) {
+Gameboard.gameboardContainer.addEventListener('click', function (e) {
     const clicked = e.target.id;
     const arrayLocation = Array.from(String(clicked), Number);
     Gameplay.makeMove(arrayLocation);
-    console.log(Gameplay.currentPlayer)
 })
 
 Gameboard.displayBoard();
-
-
